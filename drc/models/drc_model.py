@@ -34,6 +34,25 @@ class DRC(nn.Module):
         probs = torch.sigmoid(similarities)
         return probs
     
+    def compute_loss(self, x, z, x_recon, gamma=0.01, v=100.0):
+        recon_loss = torch.nn.functional.mse_loss(x_recon, x)
+        
+        probs = self.decision_probability(z) 
+        max_probs, _ = torch.max(probs, dim=1)
+        p_random = torch.rand(max_probs.size(), device=z.device)
+        y_ij = (max_probs > p_random).float().detach()
+        
+        rewards = (v * (2 * y_ij - 1)).detach()
+        
+        log_prob = y_ij * torch.log(max_probs) + \
+                   (1 - y_ij) * torch.log(1 - max_probs)
+        
+        rc_loss = -gamma * torch.mean(rewards * log_prob)
+        
+        total_loss = recon_loss + rc_loss
+        
+        return total_loss, recon_loss, rc_loss
+    
     def get_cluster_assignments(self, z):
         """Get cluster assignments - Inference"""
         probs = self.decision_probability(z)

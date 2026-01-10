@@ -66,7 +66,7 @@ class GraphAutoEncoder(nn.Module):
         # Final encoding layer 
         encoder_layers.append(nn.Linear(prev_dim, latent_dim))
         
-        self.encoder_gcns = nn.ModuleList(encoder_layers[:-1])  # GCN layers
+        self.encoder_layers = nn.ModuleList(encoder_layers[:-1])  # GCN layers
         self.encoder_final = encoder_layers[-1]  # Final linear layer
         
         # decoder layers
@@ -81,12 +81,12 @@ class GraphAutoEncoder(nn.Module):
             prev_dim = hidden_dim
         decoder_layers.append(nn.Linear(prev_dim, input_dim))
         
-        self.decoder = nn.Sequential(*decoder_layers)
+        self.decoder_layers = nn.Sequential(*decoder_layers)
     
     def encode(self, x, adj):
         h = x
         
-        for gcn in self.encoder_gcns:
+        for gcn in self.encoder_layers:
             h = gcn(h, adj)
             h = F.relu(h)
             if self.dropout > 0:
@@ -96,7 +96,7 @@ class GraphAutoEncoder(nn.Module):
         return z
     
     def decode(self, z):
-        return self.decoder(z)
+        return self.decoder_layers(z)
     
     def forward(self, x, adj):
         z = self.encode(x, adj)

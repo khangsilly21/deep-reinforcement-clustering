@@ -59,3 +59,5 @@ def preprocess_cite_data(features, adj, labels):
     adj_norm = torch.mm(torch.mm(d_mat_inv_sqrt, adj), d_mat_inv_sqrt)
     
     return features, adj_norm, labels
+
+# Note: Use all data in 1 batch so no need for data loader
